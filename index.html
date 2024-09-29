@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <script src="https://d3js.org/d3.v7.min.js"></script>
+ <title> Top 4 Category Grammy Winners By Gender</title>
+</head>
+<body>
+    <p id = "scatterplot">
+    d3.csv("grammy_winners.csv").then(data => {
+        // Convert year to number and prepare the dataset
+        data.forEach(d => {
+            d.year = +d.year; // Ensure year is treated as a number
+        });
+    
+        // Prepare data by year and gender
+        const nestedData = d3.rollup(data, 
+            v => d3.rollup(v, g => g.length, d => d.gender), // Count female and male winners by year
+            d => d.year
+        );
+        
+        // Convert to array for easier manipulation
+        const scatterData = Array.from(nestedData, ([year, genders]) => ({
+            year: year,
+            male: genders.get('male') || 0,   // Get the number of male winners
+            female: genders.get('female') || 0 // Get the number of female winners
+        }));
+        
+        // Now we have the data in format { year, male, female }
+        console.log(scatterData);
+        
+        // Use scatterData to create the scatter plot
+
+    const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+    const width = 800 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select("#scatterPlot")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Set up scales
+    const x = d3.scaleLinear()
+        .domain(d3.extent(scatterData, d => d.year))
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(scatterData, d => Math.max(d.male, d.female))])
+        .range([height, 0]);
+
+    // Add axes
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d3.format("d")));  // Year ticks
+
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    // Add scatter points for female winners
+    svg.selectAll(".female-dot")
+        .data(scatterData)
+        .enter().append("circle")
+        .attr("class", "female-dot")
+        .attr("cx", d => x(d.year))
+        .attr("cy", d => y(d.female))
+        .attr("r", 5)
+        .attr("fill", "pink");
+
+    // Add scatter points for male winners
+    svg.selectAll(".male-dot")
+        .data(scatterData)
+        .enter().append("circle")
+        .attr("class", "male-dot")
+        .attr("cx", d => x(d.year))
+        .attr("cy", d => y(d.male))
+        .attr("r", 5)
+        .attr("fill", "blue");
+
+    });
+
+</p>
+</body>
+</html>
