@@ -7,7 +7,9 @@
  <title> Top 4 Category Grammy Winners By Gender</title>
 </head>
 <body>
-    <p id = "scatterplot">
+    <p id = "graph1">
+        <svg id="scatterplot" width="500" height="500"></svg>
+        <script>
     d3.csv("grammy_winners.csv").then(data => {
         // Convert year to number and prepare the dataset
         data.forEach(d => {
@@ -36,7 +38,7 @@
     const width = 800 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
-    const svg = d3.select("#scatterPlot")
+    const svg = d3.select("#scatterplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -81,6 +83,7 @@
         .attr("fill", "blue");
 
     });
+</script>
 
 </p>
 </body>
