@@ -6,78 +6,281 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <title> Top 4 Category Grammy Winners By Gender</title>
+    <style>
+        body {
+            font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            text-align: center;
+            background-color: #f9eeee;
+        }
+
+        #graph1,
+        #graph2 {
+            align-content: center;
+        }
+
+        #summary {
+            text-align: center;
+            max-width: 700px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            margin-bottom: 20px;
+            margin-left: 26%;
+
+        }
+    </style>
+    <h1> INFO3300 Project 1</h1>
+    <h3> Adeyinka Oyemade (aao67), Andre Thomas (ajt243), Stephanie Dyer (sd625), Valerie Beriquette (vlb49)
+    </h3>
 </head>
 
 <body>
+    <p id="summary">
+        <strong>Graph Visualization Description: </strong>
+        In this visualization, we explore the gender distribution of Grammy
+        winners across decades based on the top 4 categories <strong>(Record of the Year,
+            Album of the Year, Song of the Year & Best New Artist) </strong> . The graph, based
+        on the "grammy_winners.csv" data, depicts the number of male and female
+        winners for each decade in major Grammy categories.The x-axis represents
+        the decades, starting from the 1950s, while the y-axis shows the total
+        number of Grammy awards won. Pink dots represent female winners, and
+        dark blue dots represent male winners.This visualization highlights
+        the gender disparity in Grammy wins and provides insight into how the
+        representation of female artists has changed over the years. Through
+        this analysis, we aim to encourage conversations about gender equity
+        in the music industry and the recognition of diverse talent.
+    </p>
     <p id="graph1">
-        <svg id="scatterplot" width="600" height="600"></svg>
-        <script>
-            d3.csv("grammy_winners.csv").then(data => {
+    <h2> Number of Grammy's Won by Gender in the Top Four Categories Over Time</h2>
+    <svg id="scatterplot" width="800" height="500"></svg>
+    <script>
+        d3.csv("grammy_winners.csv").then(data => {
 
-                data.forEach(d => {
-                    d.year = +d.Year;
-                });
-
-                // Source: https://d3js.org/
-                const nestedData = d3.rollup(data,
-                    v => d3.rollup(v, g => g.length, d => d.Gender),
-                    d => d.year
-                );
-                const scatterData = Array.from(nestedData, ([year, genders]) => ({
-                    year: year,
-                    male: genders.get('Male') || 0,
-                    female: genders.get('Female') || 0
-                }));
-
-                console.log(scatterData);
-
-                const margin = { top: 20, right: 30, bottom: 50, left: 60 };
-                const width = 800 - margin.left - margin.right;
-                const height = 500 - margin.top - margin.bottom;
-
-                const svg = d3.select("#scatterplot")
-                    .append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-                const x = d3.scaleLinear()
-                    .domain(d3.extent(scatterData, d => d.year))
-                    .range([0, width]);
-
-                const y = d3.scaleLinear()
-                    .domain([0, 4])
-                    .range([height, 0]);
-
-                svg.append("g")
-                    .attr("transform", `translate(0,${height})`)
-                    .call(d3.axisBottom(x).tickFormat(d3.format("d")));
-
-                svg.append("g")
-                    .call(d3.axisLeft(y).tickValues([1, 2, 3, 4]));
-
-                svg.selectAll(".female-dot")
-                    .data(scatterData)
-                    .enter().append("circle")
-                    .attr("class", "female-dot")
-                    .attr("cx", d => x(d.year))
-                    .attr("cy", d => y(d.female))
-                    .attr("r", 6)
-                    .attr("fill", "pink");
-
-                svg.selectAll(".male-dot")
-                    .data(scatterData)
-                    .enter().append("circle")
-                    .attr("class", "male-dot")
-                    .attr("cx", d => x(d.year))
-                    .attr("cy", d => y(d.male))
-                    .attr("r", 6)
-                    .attr("fill", "blue");
-
+            data.forEach(d => {
+                d.year = +d.Year;
+                d.decade = Math.floor(d.year / 10) * 10;
             });
-        </script>
 
+            const nestedData = d3.rollup(data,
+                v => d3.rollup(v, g => g.length, d => d.Gender),
+                d => d.decade
+            );
+
+            const scatterData = Array.from(nestedData, ([decade, genders]) => ({
+                decade: decade,
+                male: genders.get('Male') || 0,
+                female: genders.get('Female') || 0,
+                mixed: genders.get('Mixed') || 0
+            }));
+
+            console.log(scatterData);
+
+            const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+            const width = 800 - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            const svg = d3.select("#scatterplot")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const decades = Array.from(new Set(scatterData.map(d => d.decade)));
+
+            const maxWinners = d3.max(scatterData, d => Math.max(d.male, d.female, d.mixed));
+
+            const x = d3.scaleLinear()
+                .domain([d3.min(scatterData, d => d.decade), d3.max(scatterData, d => d.decade) + 10])
+                .range([0, width]);
+
+            const y = d3.scaleLinear()
+                .domain([0, maxWinners])
+                .range([height, 0]);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .tickValues(decades)
+                    .tickFormat(d => `${d}s`)
+                );
+
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(maxWinners));
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .text("Decade");
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 15)
+                .text("Number of Awards");
+
+            svg.selectAll(".female-dot")
+                .data(scatterData)
+                .enter().append("circle")
+                .attr("class", "female-dot")
+                .attr("cx", d => x(d.decade))
+                .attr("cy", d => y(d.female))
+                .attr("r", 8)
+                .attr("fill", "#FF69B4");
+
+            svg.selectAll(".male-dot")
+                .data(scatterData)
+                .enter().append("circle")
+                .attr("class", "male-dot")
+                .attr("cx", d => x(d.decade))
+                .attr("cy", d => y(d.male))
+                .attr("r", 8)
+                .attr("fill", "#00008b");
+
+            svg.selectAll(".mixed-dot")
+                .data(scatterData)
+                .enter().append("circle")
+                .attr("class", "mixed-dot")
+                .attr("cx", d => x(d.decade))
+                .attr("cy", d => y(d.mixed))
+                .attr("r", 8)
+                .attr("fill", "#808080");
+
+            // TODO: Create color legend
+        });
+
+    </script>
+
+    </p>
+    <p id="graph2">
+    <h2>Percentage of Male to Female Winners by Grammy Category</h2>
+    <svg id="histogram" width="800" height="500"></svg>
+    <script>
+        d3.csv("grammy_winners.csv").then(data => {
+            const categoryData = d3.rollup(data,
+                v => ({
+                    total: v.length,
+                    male: v.filter(d => d.Gender === 'Male').length,
+                    female: v.filter(d => d.Gender === 'Female').length,
+                    mixed: v.filter(d => d.Gender === 'Mixed').length
+                }),
+                d => d.Category
+            );
+
+            const histogramData = Array.from(categoryData, ([category, counts]) => ({
+                category: category,
+                malePercentage: (counts.male / counts.total) * 100,
+                femalePercentage: (counts.female / counts.total) * 100,
+                mixedPercentage: (counts.mixed / counts.total) * 100
+            }));
+
+            console.log(histogramData);
+
+            const margin = { top: 20, right: 30, bottom: 100, left: 60 };
+            const width = 800 - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            const svg = d3.select("#histogram")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand()
+                .domain(histogramData.map(d => d.category))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([height, 0]);
+
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .style("text-anchor", "center");
+
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(10).tickFormat(d => d + "%"));
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 50)
+                .text("Grammy Category");
+
+            svg.append("text")
+                .attr("text-anchor", "middle")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 15)
+                .text("Percentage of Male to Female Winners");
+
+            const barWidth = x.bandwidth() / 3;
+
+            svg.selectAll(".bar-male")
+                .data(histogramData)
+                .enter().append("rect")
+                .attr("class", "bar-male")
+                .attr("x", d => x(d.category))
+                .attr("y", d => y(d.malePercentage))
+                .attr("width", barWidth)
+                .attr("height", d => height - y(d.malePercentage))
+                .attr("fill", "#00008b");
+
+            svg.selectAll(".bar-female")
+                .data(histogramData)
+                .enter().append("rect")
+                .attr("class", "bar-female")
+                .attr("x", d => x(d.category) + barWidth)
+                .attr("y", d => y(d.femalePercentage))
+                .attr("width", barWidth)
+                .attr("height", d => height - y(d.femalePercentage))
+                .attr("fill", "#FF69B4");
+
+            svg.selectAll(".bar-mixed")
+                .data(histogramData)
+                .enter().append("rect")
+                .attr("class", "bar-mixed")
+                .attr("x", d => x(d.category) + 2 * barWidth)
+                .attr("y", d => y(d.mixedPercentage))
+                .attr("width", barWidth)
+                .attr("height", d => height - y(d.mixedPercentage))
+                .attr("fill", "#808080");
+
+            svg.selectAll(".label-male")
+                .data(histogramData)
+                .enter().append("text")
+                .attr("class", "label-male")
+                .attr("x", d => x(d.category) + barWidth / 2)
+                .attr("y", d => y(d.malePercentage) - 5)
+                .attr("text-anchor", "middle")
+                .text(d => d.malePercentage.toFixed(1) + "%");
+
+            svg.selectAll(".label-female")
+                .data(histogramData)
+                .enter().append("text")
+                .attr("class", "label-female")
+                .attr("x", d => x(d.category) + barWidth + barWidth / 2)
+                .attr("y", d => y(d.femalePercentage) - 5)
+                .attr("text-anchor", "middle")
+                .text(d => d.femalePercentage.toFixed(1) + "%");
+
+            svg.selectAll(".label-mixed")
+                .data(histogramData)
+                .enter().append("text")
+                .attr("class", "label-mixed")
+                .attr("x", d => x(d.category) + 2 * barWidth + barWidth / 2)
+                .attr("y", d => y(d.mixedPercentage) - 5)
+                .attr("text-anchor", "middle")
+                .text(d => d.mixedPercentage.toFixed(1) + "%");
+
+            // TODO: Create color legend
+        });
+    </script>
     </p>
 </body>
 
