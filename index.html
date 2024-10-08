@@ -18,6 +18,11 @@
             align-content: center;
         }
 
+        img {
+            height: 20%;
+            width: 20%;
+        }
+
         #summary {
             text-align: center;
             max-width: 700px;
@@ -31,6 +36,9 @@
     <h1> INFO3300 Project 1</h1>
     <h3> Adeyinka Oyemade (aao67), Andre Thomas (ajt243), Stephanie Dyer (sd625), Valerie Beriquette (vlb49)
     </h3>
+    <!-- Source: AI Generated -->
+    <img src="grammy_img.jpg">
+
 </head>
 
 <body>
@@ -49,10 +57,12 @@
         this analysis, we aim to encourage conversations about gender equity
         in the music industry and the recognition of diverse talent.
     </p>
+
     <p id="graph1">
     <h2> Number of Grammy's Won by Gender in the Top Four Categories Over Time</h2>
     <svg id="scatterplot" width="800" height="500"></svg>
     <script>
+        // Source: https://www.grammy.com/awards
         d3.csv("grammy_winners.csv").then(data => {
 
             data.forEach(d => {
@@ -120,13 +130,49 @@
                 .attr("y", -margin.left + 15)
                 .text("Number of Awards");
 
+            const lineFemale = d3.line()
+                .x(d => x(d.decade))
+                .y(d => y(d.female));
+
+            const lineMale = d3.line()
+                .x(d => x(d.decade))
+                .y(d => y(d.male));
+
+            const lineMixed = d3.line()
+                .x(d => x(d.decade))
+                .y(d => y(d.mixed));
+
+            svg.append("path")
+                .datum(scatterData)
+                .attr("class", "line-female")
+                .attr("fill", "none")
+                .attr("stroke", "#FF69B4")
+                .attr("stroke-width", 2)
+                .attr("d", lineFemale);
+
+            svg.append("path")
+                .datum(scatterData)
+                .attr("class", "line-male")
+                .attr("fill", "none")
+                .attr("stroke", "#00008b")
+                .attr("stroke-width", 2)
+                .attr("d", lineMale);
+
+            svg.append("path")
+                .datum(scatterData)
+                .attr("class", "line-mixed")
+                .attr("fill", "none")
+                .attr("stroke", "#808080")
+                .attr("stroke-width", 2)
+                .attr("d", lineMixed);
+
             svg.selectAll(".female-dot")
                 .data(scatterData)
                 .enter().append("circle")
                 .attr("class", "female-dot")
                 .attr("cx", d => x(d.decade))
                 .attr("cy", d => y(d.female))
-                .attr("r", 8)
+                .attr("r", 7)
                 .attr("fill", "#FF69B4");
 
             svg.selectAll(".male-dot")
@@ -135,7 +181,7 @@
                 .attr("class", "male-dot")
                 .attr("cx", d => x(d.decade))
                 .attr("cy", d => y(d.male))
-                .attr("r", 8)
+                .attr("r", 7)
                 .attr("fill", "#00008b");
 
             svg.selectAll(".mixed-dot")
@@ -144,10 +190,36 @@
                 .attr("class", "mixed-dot")
                 .attr("cx", d => x(d.decade))
                 .attr("cy", d => y(d.mixed))
-                .attr("r", 8)
+                .attr("r", 7)
                 .attr("fill", "#808080");
 
-            // TODO: Create color legend
+
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width - 150},${0})`);
+
+            const legendData = [
+                { label: "Female", color: "#FF69B4" },
+                { label: "Male", color: "#00008b" },
+                { label: "Mixed", color: "#808080" }
+            ];
+
+            legend.selectAll("rect")
+                .data(legendData)
+                .enter().append("rect")
+                .attr("x", 0)
+                .attr("y", (d, i) => i * 20)
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", d => d.color);
+
+            legend.selectAll("text")
+                .data(legendData)
+                .enter().append("text")
+                .attr("x", 24)
+                .attr("y", (d, i) => i * 20 + 13)
+                .text(d => d.label)
+                .attr("font-size", "14px");
+
         });
 
     </script>
@@ -155,8 +227,10 @@
     </p>
     <p id="graph2">
     <h2>Percentage of Male to Female Winners by Grammy Category</h2>
+    <h4>(accumulated since 1959)</h4>
     <svg id="histogram" width="800" height="500"></svg>
     <script>
+        // Source: https://www.grammy.com/awards
         d3.csv("grammy_winners.csv").then(data => {
             const categoryData = d3.rollup(data,
                 v => ({
@@ -278,7 +352,31 @@
                 .attr("text-anchor", "middle")
                 .text(d => d.mixedPercentage.toFixed(1) + "%");
 
-            // TODO: Create color legend
+            const legend = svg.append("g")
+                .attr("transform", `translate(${width - 150},${0})`);
+
+            const legendData = [
+                { label: "Female", color: "#FF69B4" },
+                { label: "Male", color: "#00008b" },
+                { label: "Mixed", color: "#808080" }
+            ];
+
+            legend.selectAll("rect")
+                .data(legendData)
+                .enter().append("rect")
+                .attr("x", 0)
+                .attr("y", (d, i) => i * 20)
+                .attr("width", 18)
+                .attr("height", 18)
+                .attr("fill", d => d.color);
+
+            legend.selectAll("text")
+                .data(legendData)
+                .enter().append("text")
+                .attr("x", 24)
+                .attr("y", (d, i) => i * 20 + 13)
+                .text(d => d.label)
+                .attr("font-size", "14px");
         });
     </script>
     </p>
